@@ -4,6 +4,7 @@ namespace app\models;
 
 use Yii;
 use yii\base\Model;
+use GuzzleHttp\Client;
 
 /**
  * LoginForm is the model behind the login form.
@@ -17,8 +18,6 @@ class LoginForm extends Model
     public $password;
     public $rememberMe = true;
 
-    private $_user = false;
-
 
     /**
      * @return array the validation rules.
@@ -30,8 +29,8 @@ class LoginForm extends Model
             [['username', 'password'], 'required'],
             // rememberMe must be a boolean value
             ['rememberMe', 'boolean'],
-            // password is validated by validatePassword()
-            ['password', 'validatePassword'],
+            // username password is validated by validatePassword()
+            [['username','password'], 'validatePassword'],
         ];
     }
 
@@ -44,12 +43,14 @@ class LoginForm extends Model
      */
     public function validatePassword($attribute, $params)
     {
-        if (!$this->hasErrors()) {
-            $user = $this->getUser();
-
-            if (!$user || !$user->validatePassword($this->password)) {
-                $this->addError($attribute, 'Incorrect username or password.');
-            }
+        $client = new Client(['base_uri' => 'https://rest.websupport.sk/']);
+        try {
+            json_decode($client->request('GET','v1/user/', [
+                'auth' => [$this->username,$this->password]
+            ])->getBody()->getContents(), true);
+            return true;
+        } catch (\Exception $exception) {
+            $this->addError($attribute, 'Incorrect username or password.');
         }
     }
 
@@ -60,22 +61,22 @@ class LoginForm extends Model
     public function login()
     {
         if ($this->validate()) {
-            return Yii::$app->user->login($this->getUser(), $this->rememberMe ? 3600*24*30 : 0);
+            return Yii::$app->user->login($this->createUser(), $this->rememberMe ? 3600*24*30 : 0);
         }
         return false;
     }
 
     /**
-     * Finds user by [[username]]
-     *
-     * @return User|null
+     * Creates user using credentials from API
      */
-    public function getUser()
+    public function createUser()
     {
-        if ($this->_user === false) {
-            $this->_user = User::findByUsername($this->username);
-        }
-
-        return $this->_user;
+        $user = new User();
+        $user->id = 1;
+        $user->username = $this->username;
+        $user->password = $this->password;
+        $user->authKey = json_encode($this->username.'.'.$this->password);
+        $user->accessToken = json_encode($this->username.'.'.$this->password);
+        return $user;
     }
 }
