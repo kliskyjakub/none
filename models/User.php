@@ -3,6 +3,7 @@
 namespace app\models;
 
 use GuzzleHttp\Client;
+use Yii;
 
 class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
 {
@@ -18,7 +19,25 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
      */
     public static function findIdentity($id)
     {
-        // return null;
+        if (empty($id)) {
+            return null;
+          }
+  
+          $decodedId = base64_decode($id);
+          if ($decodedId === false) {
+              throw new InvalidCallException('ID is invalid');
+          }
+  
+          $ids = explode('{', $decodedId);
+          if ($ids === false) {
+              throw new InvalidCallException('ID is malformated');
+          }
+  
+          $user = new User();
+          $user->id = $id;
+          $user->username = $ids[0];
+          $user->password = $ids[1];
+          return $user;
     }
 
     /**
@@ -45,7 +64,7 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
      */
     public function getId()
     {
-        return $this->id;
+        return base64_encode($this->username.'{'.$this->password);
     }
 
     /**
@@ -88,11 +107,11 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
      */
     public function createUser($username,$password)
     {
-        $this->id = json_encode($username);
+        $this->id = base64_encode($username.'{'.$password);
         $this->username = $username;
         $this->password = $password;
-        $this->authKey = rand();
-        $this->accessToken = rand();
+        $this->authKey = Yii::$app->security->generateRandomString();
+        $this->accessToken = Yii::$app->security->generateRandomString();
         return $this;
     }
 }
