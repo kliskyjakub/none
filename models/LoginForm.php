@@ -5,6 +5,7 @@ namespace app\models;
 use Yii;
 use yii\base\Model;
 use GuzzleHttp\Client;
+use app\models\User;
 
 /**
  * LoginForm is the model behind the login form.
@@ -43,14 +44,11 @@ class LoginForm extends Model
      */
     public function validatePassword($attribute, $params)
     {
-        $client = new Client(['base_uri' => 'https://rest.websupport.sk/']);
-        try {
-            json_decode($client->request('GET','v1/user/', [
-                'auth' => [$this->username,$this->password]
-            ])->getBody()->getContents(), true);
-            return true;
-        } catch (\Exception $exception) {
+        $user = new User;
+        if($user->validatePassword($this->username,$this->password) !== true) {
             $this->addError($attribute, 'Incorrect username or password.');
+        } else {
+            return true;
         }
     }
 
@@ -61,22 +59,9 @@ class LoginForm extends Model
     public function login()
     {
         if ($this->validate()) {
-            return Yii::$app->user->login($this->createUser(), $this->rememberMe ? 3600*24*30 : 0);
+            $user = new User();
+            return Yii::$app->user->login($user->createUser($this->username,$this->password), $this->rememberMe ? 3600*24*30 : 0);
         }
         return false;
-    }
-
-    /**
-     * Creates user using credentials from API
-     */
-    public function createUser()
-    {
-        $user = new User();
-        $user->id = 1;
-        $user->username = $this->username;
-        $user->password = $this->password;
-        $user->authKey = json_encode($this->username.'.'.$this->password);
-        $user->accessToken = json_encode($this->username.'.'.$this->password);
-        return $user;
     }
 }
