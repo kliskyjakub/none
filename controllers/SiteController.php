@@ -8,6 +8,7 @@ use yii\web\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
+use app\models\SignupForm;
 use app\models\ContactForm;
 
 class SiteController extends Controller
@@ -75,12 +76,29 @@ class SiteController extends Controller
             return $this->goHome();
         }
 
-        $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post()) && $model->login()) {
+        $loginForm = new LoginForm();
+        if ($loginForm->load(Yii::$app->request->post()) && $loginForm->login()) {
             return $this->goHome();
         } else {
             return $this->render('login', [
-                'model' => $model,
+                'loginForm' => $loginForm,
+            ]);
+        }
+    }
+
+    public function actionSignup()
+    {
+        if (!Yii::$app->user->isGuest) {
+            return $this->goHome();
+        }
+
+        $signupForm = new SignupForm();
+        if ($signupForm->load(Yii::$app->request->post()) && $signupForm->signup()) {
+            Yii::$app->session->setFlash('success','You have successfully signed up! You can log in now.');
+            return $this->redirect(['/site/login']);
+        } else {
+            return $this->render('signup', [
+                'signupForm' => $signupForm,
             ]);
         }
     }

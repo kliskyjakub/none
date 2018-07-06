@@ -8,24 +8,24 @@ class UserTest extends \Codeception\Test\Unit
 {
     public function testFindUserById()
     {
-        expect_that($user = User::findIdentity(100));
-        expect($user->username)->equals('admin');
+        expect_that($user = User::findIdentity(1));
+        expect($user->username)->equals('test');
 
-        expect_not(User::findIdentity(999));
+        expect_not(User::findIdentity(0));
     }
 
-    public function testFindUserByAccessToken()
-    {
-        expect_that($user = User::findIdentityByAccessToken('100-token'));
-        expect($user->username)->equals('admin');
-
-        expect_not(User::findIdentityByAccessToken('non-existing'));        
-    }
+    // public function testFindUserByAccessToken()
+    // {
+    //     expect_that($user = User::findIdentityByAccessToken('100-token'));
+    //     expect($user->username)->equals('admin');
+    //
+    //     expect_not(User::findIdentityByAccessToken('non-existing'));
+    // }
 
     public function testFindUserByUsername()
     {
-        expect_that($user = User::findByUsername('admin'));
-        expect_not(User::findByUsername('not-admin'));
+        expect_that($user = User::findByUsername('test'));
+        expect_not(User::findByUsername('not-test'));
     }
 
     /**
@@ -33,12 +33,12 @@ class UserTest extends \Codeception\Test\Unit
      */
     public function testValidateUser($user)
     {
-        $user = User::findByUsername('admin');
-        expect_that($user->validateAuthKey('test100key'));
-        expect_not($user->validateAuthKey('test102key'));
+        $user = User::findByUsername('test');
+        // expect_that($user->validateAuthKey('test100key'));
+        // expect_not($user->validateAuthKey('test102key'));
 
-        expect_that($user->validatePassword('admin'));
-        expect_not($user->validatePassword('123456'));        
+        expect_that($user->validatePassword('test','test123'));
+        expect_not($user->validatePassword('test','123456'));
     }
 
 }

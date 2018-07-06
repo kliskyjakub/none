@@ -22,17 +22,6 @@ class Ws
             'auth' => [$this->username,$this->password]
         ])->getBody()->getContents(), true)['items'][0]['id'];
     }
-
-    public function apiUser(){
-        try {
-            return json_decode($this->client->request('GET','v1/user/', [
-                'auth' => [$this->username,$this->password]
-            ])->getBody()->getContents(), true);
-        } catch (\Exception $exception) {
-            return 'Something went wrong. Try again.';
-        }
-    }
-
     public function apiUserData($id){
         try {
             return json_decode($this->client->request('GET','v1/user/'.$id, [

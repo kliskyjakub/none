@@ -4,19 +4,18 @@ namespace app\models;
 
 use Yii;
 use yii\base\Model;
-use app\models\User;
+use GuzzleHttp\Client;
 
 /**
- * LoginForm is the model behind the login form.
+ * WsForm is the model behind the ws form.
  *
  * @property User|null $user This property is read-only.
  *
  */
-class LoginForm extends Model
+class WsForm extends Model
 {
     public $username;
     public $password;
-    public $rememberMe = true;
 
 
     /**
@@ -27,8 +26,6 @@ class LoginForm extends Model
         return [
             // username and password are both required
             [['username', 'password'], 'required'],
-            // rememberMe must be a boolean value
-            ['rememberMe', 'boolean'],
             // username password is validated by validatePassword()
             [['username','password'], 'validatePassword'],
         ];
@@ -43,23 +40,13 @@ class LoginForm extends Model
      */
     public function validatePassword($attribute, $params)
     {
-        $user = new User;
-        if($user->validatePassword($this->username,$this->password) !== true) {
-            $this->addError($attribute, 'Incorrect username or password.');
-        } else {
-            return true;
-        }
-    }
-
-    /**
-     * Logs in a user using the provided username and password.
-     * @return bool whether the user is logged in successfully
-     */
-    public function login()
-    {
-        if ($this->validate()) {
-            return Yii::$app->user->login(User::findByUsername($this->username),$this->rememberMe ? 3600*24*30 : 0);
-        }
-        return false;
+      try {
+          $client = new Client(['base_uri' => 'https://rest.websupport.sk/']);
+          return json_decode($client->request('GET','v1/user/', [
+              'auth' => [$this->username,$this->password]
+          ])->getBody()->getContents(), true);
+      } catch (\Exception $exception) {
+          $this->addError($attribute, 'Incorrect username or password.');
+      }
     }
 }

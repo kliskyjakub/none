@@ -16,21 +16,27 @@
     <div class="body-content">
 
         <div class="row">
-            <div class="col-lg-4">
-                <h2>WS Api</h2>
+          <div class="col-lg-4">
+              <h2>Basketball DB</h2>
 
-                <p><br/><br/>This tool allows user to connect to WebSupport API using GuzzleHttp<br/><br/><br/></p>
+              <p><br/><br/>Migration creating table with match data and output with GridView widget.<br/><br/><br/></p>
 
-                <p><a class="btn btn-default" href="/ws">Connect to WS Api &raquo;</a></p>
-            </div>
-            <div class="col-lg-4">
-                <h2>Basketball DB</h2>
+              <p><a class="btn btn-default" href="/basketball">Show me Box Score &raquo;</a></p>
+          </div>
+          <div class="col-lg-4">
+              <h2>WS Api</h2>
 
-                <p><br/><br/>Migration creating table with match data and output with GridView widget<br/><br/><br/></p>
+              <p><br/><br/>This tool allows user to connect to WebSupport API using GuzzleHttp.<br/><br/><br/></p>
 
-                <p><a class="btn btn-default" href="/basketball">Connect to WS Api &raquo;</a></p>
-            </div>
+              <p><a class="btn btn-default" href="/ws">Connect to WS Api &raquo;</a></p>
+          </div>
+          <div class="col-lg-4">
+              <h2>User login system</h2>
+
+              <p><br/><br/>ActiveRecord database system where user can sign up and then log in.<br/><br/><br/></p>
+
+              <p><a class="btn btn-default" href="/site/signup">Sign up &raquo;</a></p>
+          </div>
         </div>
-
     </div>
 </div>

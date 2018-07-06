@@ -4,6 +4,7 @@ namespace app\models;
 
 use GuzzleHttp\Client;
 use Yii;
+use app\models\DbUser;
 
 class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
 {
@@ -22,24 +23,15 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
         if (empty($id)) {
             return null;
         }
-  
-        $decodedId = base64_decode($id);
-        if ($decodedId === false) {
-            throw new InvalidCallException('ID is invalid');
+        $dbUser = DbUser::find()->where(['id'=>$id])->one();
+        if (empty($dbUser)) {
+            return null;
         }
-  
-        $ids = explode('{', $decodedId);
-        if ($ids === false) {
-            throw new InvalidCallException('ID is malformated');
-        }
-  
-        $user = new User();
-        $user->id = $id;
-        $user->username = $ids[0];
-        $user->password = $ids[1];
-        $user->authKey = $ids[2];
-        $user->accessToken = $ids[3];
-        return $user;
+        return new self([
+          'id' => $dbUser->id,
+          'username' => $dbUser->username,
+          'password' => $dbUser->password
+        ]);
     }
 
     /**
@@ -58,7 +50,18 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
      */
     public static function findByUsername($username)
     {
-        // return null;
+      if (empty($username)) {
+          return null;
+      }
+      $dbUser = DbUser::find()->where(['username'=>$username])->one();
+      if (empty($dbUser)) {
+          return null;
+      }
+      return new self([
+        'id' => $dbUser->id,
+        'username' => $dbUser->username,
+        'password' => $dbUser->password
+      ]);
     }
 
     /**
@@ -66,7 +69,7 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
      */
     public function getId()
     {
-        return base64_encode($this->username.'{'.$this->password.'{'.$this->authKey.'{'.$this->accessToken);
+      return $this->id;
     }
 
     /**
@@ -93,27 +96,17 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
      */
     public function validatePassword($username,$password)
     {
-        $client = new Client(['base_uri' => 'https://rest.websupport.sk/']);
-        try {
-            json_decode($client->request('GET','v1/user/', [
-                'auth' => [$username,$password]
-            ])->getBody()->getContents(), true);
-            return true;
-        } catch (\Exception $exception) {
-            return 'Something went wrong. Try again.';
-        }
-    }
-
-    /**
-     * Creates user using credentials from API
-     */
-    public function createUser($username,$password)
-    {
-        $this->username = $username;
-        $this->password = $password;
-        $this->authKey = Yii::$app->security->generateRandomString();
-        $this->accessToken = Yii::$app->security->generateRandomString();
-        $this->id = base64_encode($username.'{'.$password.'{'.$this->authKey.'{'.$this->accessToken);
-        return $this;
+      $dbUser = self::findByUsername($username);
+      if (empty($dbUser)) {
+        //User does not exist
+        return false;
+      }
+      if (Yii::$app->getSecurity()->validatePassword($password, $dbUser->password)) {
+        // all good, logging user in
+        return true;
+      } else {
+        // wrong password
+        return false;
+      }
     }
 }
